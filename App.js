@@ -1,7 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
 
 const Stack = createStackNavigator();
 
@@ -16,7 +22,7 @@ function MemoList({ navigation }) {
   // 헤더 제목 업데이트
   useEffect(() => {
     navigation.setOptions({
-      title: `메모리스트(${memos.length})`,
+      title: `메모리스트(${memos.length})`, // 동적으로 메모 개수 반영
     });
   }, [memos, navigation]);
 
@@ -36,7 +42,11 @@ function MemoList({ navigation }) {
       return updatedMemos;
     });
   };
-  
+
+  const deleteMemo = (id) => {
+    setMemos((prevMemos) => prevMemos.filter((memo) => memo.id !== id));
+  };
+
   return (
     <View style={styles.container}>
       <FlatList
@@ -45,16 +55,24 @@ function MemoList({ navigation }) {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.memoItem}>
-            <TouchableOpacity style={styles.memoContent}>
-              <Text style={styles.memoHeader}>
+            <TouchableOpacity
+              style={styles.memoContent}
+              onPress={() =>
+                navigation.navigate('MemoDetail', { memo: item, deleteMemo })
+              }
+            >
+              <Text style= {styles.memoHeader}>
                 <Text style={styles.memoTitle}>
                   {item.title.length > 20 ? `${item.title.slice(0, 20)}...` : item.title}{' '}
-                  <Text style={styles.memoDate}>{item.date}</Text>
+                  <Text style={styles.memoDate}>{item.date}</Text> {/* 날짜 스타일 적용 */}
                 </Text>
               </Text>
               <Text style={styles.memoContentText}>
                 {item.description.length > 35 ? `${item.description.slice(0, 35)}...` : item.description}
               </Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.deleteButton} onPress={() => deleteMemo(item.id)}>
+              <Text style={styles.deleteText}>X</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -67,6 +85,7 @@ function MemoList({ navigation }) {
   );
 }
 
+// 스타일 정의
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   header: { fontSize: 18, fontWeight: 'bold', padding: 16 },
@@ -80,10 +99,30 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   memoContent: { flex: 1 },
-  memoHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  memoTitle: { fontSize: 16, fontWeight: 'bold', color: '#000' },
-  memoDate: { fontSize: 14, color: '#666' },
+  memoHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  memoTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000',
+    flex: 1, // 제목이 길어지면 공간을 차지하고 말줄임표가 적용됨
+    marginRight: 8, // 날짜와 간격을 두기 위한 여백
+    overflow: 'hidden', // 제목이 길어지면 넘치는 부분을 잘라냄
+    textOverflow: 'ellipsis', // 말줄임표 적용
+  },  
+  memoDate: { fontSize: 14, color: '#666', width: 'auto' }, // 날짜 스타일 추가
   memoContentText: { fontSize: 14, color: '#666' },
+  deleteButton: {
+    marginLeft: 8,
+    padding: 8,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+  },
+  deleteText: { color: '#000', fontWeight: 'bold' },
   addButton: {
     position: 'absolute',
     bottom: 16,
