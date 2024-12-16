@@ -6,6 +6,7 @@ import {
   Text,
   FlatList,
   TouchableOpacity,
+  TextInput,
   StyleSheet,
 } from 'react-native';
 
@@ -34,7 +35,7 @@ function MemoList({ navigation }) {
       date: new Date().toISOString().split('T')[0],
     };
     setMemos((prevMemos) => {
-      const updatedMemos = [...prevMemos, newMemo];
+      const updatedMemos = [...prevMemos, newMemo];      
       // 새로운 메모 추가 후 마지막 메모로 스크롤 이동
       setTimeout(() => {
         flatListRef.current.scrollToEnd({ animated: true });
@@ -58,17 +59,21 @@ function MemoList({ navigation }) {
             <TouchableOpacity
               style={styles.memoContent}
               onPress={() =>
-                navigation.navigate('MemoDetail', { memo: item, deleteMemo })
+                navigation.navigate('MemoDetail', {
+                  memo: item,
+                  updateMemo: setMemos,
+                  deleteMemo,
+                })
               }
             >
               <Text style= {styles.memoHeader}>
                 <Text style={styles.memoTitle}>
-                  {item.title.length > 20 ? `${item.title.slice(0, 20)}...` : item.title}{' '}
-                  <Text style={styles.memoDate}>{item.date}</Text> {/* 날짜 스타일 적용 */}
+                  {item.title.length > 18 ? `${item.title.slice(0, 18)}...` : item.title}{' '}
+                  <Text style={styles.memoDate}>{item.date}</Text>
                 </Text>
               </Text>
               <Text style={styles.memoContentText}>
-                {item.description.length > 35 ? `${item.description.slice(0, 35)}...` : item.description}
+                {item.description.length > 30 ? `${item.description.slice(0, 30)}...` : item.description}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.deleteButton} onPress={() => deleteMemo(item.id)}>
@@ -85,10 +90,84 @@ function MemoList({ navigation }) {
   );
 }
 
-// 스타일 정의
+function MemoDetail({ route, navigation }) {
+  const { memo, updateMemo, deleteMemo } = route.params;
+  const [isEditing, setIsEditing] = useState(false);
+  const [title, setTitle] = useState(memo.title);
+  const [description, setDescription] = useState(memo.description);
+
+  const saveChanges = () => {
+    updateMemo((prevMemos) =>
+      prevMemos.map((m) =>
+        m.id === memo.id
+          ? { ...m, title, description, date: new Date().toISOString().split('T')[0] }
+          : m
+      )
+    );
+    setIsEditing(false);
+    navigation.setOptions({ title });
+  };
+
+  const cancelChanges = () => {
+    setTitle(memo.title);
+    setDescription(memo.description);
+    setIsEditing(false);
+  };
+
+  const handleDelete = () => {
+    deleteMemo(memo.id);
+    navigation.goBack();
+  };
+
+  return (
+    <View style={styles.container}>
+      {isEditing ? (
+        <>
+          <TextInput
+            style={styles.input}
+            value={title}
+            onChangeText={setTitle}
+            placeholder="제목을 입력하세요"
+          />
+          <TextInput
+            style={styles.input}
+            value={description}
+            onChangeText={setDescription}
+            placeholder="내용을 입력하세요"
+            multiline
+          />
+          <View style={styles.buttonGroup}>
+            <TouchableOpacity onPress={saveChanges}>
+              <Text style={styles.editButton}>저장</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={cancelChanges}>
+              <Text style={styles.cancelButton}>취소</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      ) : (
+        <>
+          <View style={styles.dateAndButtons}>
+            <Text style={styles.memoTitle}>{title}</Text>
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity onPress={() => setIsEditing(true)}>
+                <Text style={styles.editButton}>수정</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleDelete}>
+                <Text style={styles.detailDeleteButton}>삭제</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          <Text style={styles.memoDate}>{memo.date}</Text>
+          <Text style={styles.memoDescription}>{description}</Text>
+        </>
+      )}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  header: { fontSize: 18, fontWeight: 'bold', padding: 16 },
+  container: { flex: 1, padding: 16, backgroundColor: '#fff' },
   memoList: { paddingHorizontal: 16, paddingBottom: 80 },
   memoItem: {
     flexDirection: 'row',
@@ -106,15 +185,16 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   memoTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
-    flex: 1, // 제목이 길어지면 공간을 차지하고 말줄임표가 적용됨
-    marginRight: 8, // 날짜와 간격을 두기 위한 여백
-    overflow: 'hidden', // 제목이 길어지면 넘치는 부분을 잘라냄
-    textOverflow: 'ellipsis', // 말줄임표 적용
-  },  
-  memoDate: { fontSize: 14, color: '#666', width: 'auto' }, // 날짜 스타일 추가
+    fontSize: 18, 
+    fontWeight: 'bold', 
+    color: '#000', 
+    marginBottom: 8, // 아래 여백 추가
+  },
+  memoDate: { 
+    fontSize: 14, 
+    color: '#666', 
+    marginBottom: 8, 
+  },
   memoContentText: { fontSize: 14, color: '#666' },
   deleteButton: {
     marginLeft: 8,
@@ -134,23 +214,56 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   addButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    padding: 8,
+    marginVertical: 8,
+    borderRadius: 4,
+    fontSize: 16,
+  },
+  buttonGroup: { 
+    flexDirection: 'row',
+    justifyContent: 'flex', 
+    alignItems: 'center'
+},
+  editButton: { color: 'blue', marginHorizontal: 8, fontSize: 16 },
+  detailDeleteButton: { color: 'red', marginHorizontal: 8, fontSize: 16 },
+  cancelButton: { color: 'gray', fontSize: 16 },
+  memoDescription: { fontSize: 16, color: '#666', marginVertical: 8 },
+  dateAndButtons: {
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: 8,
+  },
 });
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName="MemoList"
-        screenOptions={{
-          headerStyle: { backgroundColor: '#000' }, // 헤더 배경 검은색
-          headerTintColor: '#fff', // 헤더 텍스트 흰색
-          headerTitleStyle: { fontWeight: 'bold' },
-          headerTitleAlign: 'center', // 헤더 글자를 가운데 정렬
-        }}
-      >
+      <Stack.Navigator>
         <Stack.Screen
           name="MemoList"
           component={MemoList}
+          options={{
+            title: '메모 목록',
+            headerStyle: { backgroundColor: '#000' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+            headerTitleAlign: 'center',
+          }}
+        />
+        <Stack.Screen 
+          name="MemoDetail" 
+          component={MemoDetail} 
+          options={{ 
+            title: '메모 상세', 
+            headerStyle: { backgroundColor: '#000' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+            headerTitleAlign: 'center',
+          }} 
         />
       </Stack.Navigator>
     </NavigationContainer>
