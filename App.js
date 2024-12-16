@@ -138,7 +138,7 @@ function MemoDetail({ route, navigation }) {
           />
           <View style={styles.buttonGroup}>
             <TouchableOpacity onPress={saveChanges}>
-              <Text style={styles.editButton}>저장</Text>
+              <Text style={styles.editButton}>수정</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={cancelChanges}>
               <Text style={styles.cancelButton}>취소</Text>
@@ -151,7 +151,7 @@ function MemoDetail({ route, navigation }) {
             <Text style={styles.memoTitle}>{title}</Text>
             <View style={styles.buttonGroup}>
               <TouchableOpacity onPress={() => setIsEditing(true)}>
-                <Text style={styles.editButton}>수정</Text>
+                <Text style={styles.editButton}>편집</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={handleDelete}>
                 <Text style={styles.detailDeleteButton}>삭제</Text>
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
     alignItems: 'center'
 },
   editButton: { color: 'blue', marginHorizontal: 8, fontSize: 16 },
-  detailDeleteButton: { color: 'red', marginHorizontal: 8, fontSize: 16 },
+  detailDeleteButton: { color: 'gray', marginHorizontal: 8, fontSize: 16 },
   cancelButton: { color: 'gray', fontSize: 16 },
   memoDescription: { fontSize: 16, color: '#666', marginVertical: 8 },
   dateAndButtons: {
