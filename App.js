@@ -68,7 +68,7 @@ function MemoList({ navigation }) {
             >
               <Text style= {styles.memoHeader}>
                 <Text style={styles.memoTitle}>
-                  {item.title.length > 18 ? `${item.title.slice(0, 18)}...` : item.title}{' '}
+                  {item.title.length > 15 ? `${item.title.slice(0, 15)}...` : item.title}{' '}
                   <Text style={styles.memoDate}>{item.date}</Text>
                 </Text>
               </Text>
